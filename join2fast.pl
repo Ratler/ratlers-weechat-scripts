@@ -20,9 +20,9 @@ use strict;
 use warnings;
 
 my $SCRIPT_NAME = "join2fast";
-my $VERSION = "0.3";
+my $VERSION = "0.4";
 my $weechat_version = "";
-my %hooks;
+my %timers;
 my %channel_list;
 
 
@@ -31,7 +31,7 @@ weechat::register($SCRIPT_NAME, "Ratler <ratler\@stderr.eu>", $VERSION, "GPL3",
                   "Automatically join channels on UnderNET that get throttled due to \"Target change too fast\"", "", "");
 
 $weechat_version = weechat::info_get("version_number", "");
-if (($weechat_version eq "") or ($weechat_version < 0x00030200)) {
+if ($weechat_version < 0x00030200) {
   weechat::print("", weechat::prefix("error") . "$SCRIPT_NAME: requires weechat >= v0.3.2");
   weechat::command("", "/wait 1ms /perl unload $SCRIPT_NAME");
 }
@@ -49,32 +49,40 @@ sub event_439_cb {
   my $delay = $msg[10];
 
   # Check if channel has been already added or add it
-  if (!exists($channel_list{$channel})) {
-    $channel_list{$channel} = $server;
+  if (!exists($channel_list{$server}) or ((ref $channel_list{$server} eq 'ARRAY') and !($channel ~~ @{$channel_list{$server}}))) {
+    push @{$channel_list{$server}}, $channel;
   }
 
   # Reset timer to the last delay received
-  weechat::unhook($hooks{timer}) if $hooks{timer};
-  $hooks{timer} = weechat::hook_timer(($delay + 1) * 1000, 0, 1, "join_channel_cb", "");
+  weechat::unhook($timers{$server}) if $timers{$server};
+  $timers{$server} = weechat::hook_timer(($delay + 2) * 1000, 0, 1, "join_channel_cb", $server);
 
   return weechat::WEECHAT_RC_OK;
 }
 
 sub join_channel_cb {
-  # Unhook timer
-  weechat::unhook($hooks{timer}) if $hooks{timer};
-  delete $hooks{timer};
+  my $server = shift;
 
-  # Get first entry out of the hash (order doesn't matter)
-  if (keys %channel_list > 0) {
-    my $channel = (keys %channel_list)[-1];
-    my $server = $channel_list{$channel};
-    weechat::command("", "/wait 500ms /join -server $server $channel");
-    delete $channel_list{$channel};
+  if ((ref $channel_list{$server} eq 'ARRAY') and scalar @{$channel_list{$server}} > 0) {
+    my $channel = pop @{$channel_list{$server}};
+
+    # Save current buffer
+    my $buffer_ptr = weechat::current_buffer();
+    my $buffer_name = weechat::buffer_get_string($buffer_ptr, "name");
+
+    weechat::command("", "/join -server $server $channel");
+
+    # Switch back to the old buffer (a bit flakey) - disabled when irc.look.buffer_switch_join is set to off
+    my $option = weechat::config_get("irc.look.buffer_switch_join");
+    if (weechat::config_boolean($option)) {
+      weechat::command("", "/wait 1s /buffer $buffer_name");
+    }
 
     # Setup a new timer
-    if (keys %channel_list > 0) {
-      $hooks{timer} = weechat::hook_timer(2 * 1000, 0, 1, "join_channel_cb", "");
+    if ((ref $channel_list{$server} eq 'ARRAY') and scalar @{$channel_list{$server}} > 0) {
+      $timers{$server} = weechat::hook_timer(4 * 1000, 0, 1, "join_channel_cb", $server);
+    } else {
+      delete $channel_list{$server};
     }
   }
 
