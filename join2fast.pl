@@ -20,7 +20,7 @@ use strict;
 use warnings;
 
 my $SCRIPT_NAME = "join2fast";
-my $VERSION = "0.4";
+my $VERSION = "0.5";
 my $weechat_version = "";
 my %timers;
 my %channel_list;
@@ -70,11 +70,16 @@ sub join_channel_cb {
     my $buffer_ptr = weechat::current_buffer();
     my $buffer_name = weechat::buffer_get_string($buffer_ptr, "name");
 
-    weechat::command("", "/join -server $server $channel");
+    if ($weechat_version >= 0x00040000) {
+      weechat::command("", "/join -noswitch -server $server $channel");
+    } else {
+      weechat::command("", "/join -server $server $channel");
+    }
 
     # Switch back to the old buffer (a bit flakey) - disabled when irc.look.buffer_switch_join is set to off
+    # or weechat version >= 0.4.0
     my $option = weechat::config_get("irc.look.buffer_switch_join");
-    if (weechat::config_boolean($option)) {
+    if (($weechat_version < 0x00040000) and weechat::config_boolean($option)) {
       weechat::command("", "/wait 1s /buffer $buffer_name");
     }
 
