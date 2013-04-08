@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Stefan Wold <ratler@stderr.eu>
+# Copyright (C) 2012-2013 Stefan Wold <ratler@stderr.eu>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,8 @@
 #
 # Source available on GitHUB: https://github.com/Ratler/join2fast
 #
-# Automatically join channels on UnderNET that get throttled due to "Target change too fast".
+#
+# Automatically queue and join channels on UnderNET that get throttled due to "Target change too fast".
 
 use 5.010;
 use POSIX qw/strftime/;
@@ -48,7 +49,16 @@ if ($weechat_version < 0x00030200) {
 init_config();
 
 # Hook command /j2f
-weechat::hook_command("j2f", "join2fast handler", "list|clear", "", "list|clear", "j2f_command_cb", "");
+weechat::hook_command("j2f",
+                      "list/clear join2fast queue",
+                      "[list] | [clear [server]]",
+                      "   list: list current queues\n".
+                      "   clear [server]: clear all queues or the queue for a specific server",
+                      "list || clear %(irc_servers)",
+                      "j2f_command_cb", "");
+
+# Hook server disconnect to clear active queue
+weechat::hook_signal("irc_server_disconnected", "clear_queue_on_disconnect", "");
 
 # Callback for "Target change too fast" events
 weechat::hook_modifier("irc_in_439", "event_439_cb", "");
@@ -61,6 +71,10 @@ sub event_439_cb {
   # $string - the message (:server 439 nick #channel :Target change too fast. Please wait 17 seconds.)
   my $channel = (split " ", $string)[3];
   my $delay = (split " ", $string)[10];
+
+  # Return if target is not a channel
+  # TODO: Add option to allow queueing private messages
+  return $string unless $channel =~ /^(#|&)/;
 
   # Check if channel has been already added or add it
   if (!exists($channel_list{$server}) or ((ref $channel_list{$server} eq 'ARRAY') and !($channel ~~ @{$channel_list{$server}}))) {
@@ -77,6 +91,17 @@ sub event_439_cb {
 
   return $string if lc($options{hide_event_msg}) eq 'off';
   return "";
+}
+
+sub clear_queue_on_disconnect {
+  my $server = $_[2];
+
+  if (exists($channel_list{$server})) {
+    delete $channel_list{$server};
+    weechat::bar_item_update($SCRIPT_NAME);
+  }
+
+  return weechat::WEECHAT_RC_OK;
 }
 
 sub join_channel_cb {
@@ -100,7 +125,6 @@ sub join_channel_cb {
         weechat::command("", "/wait 1s /buffer $buffer_name");
       }
     }
-
 
     # Setup a new timer
     if ((ref $channel_list{$server} eq 'ARRAY') and scalar @{$channel_list{$server}} > 0) {
@@ -133,12 +157,23 @@ sub bar_cb {
 
 sub j2f_command_cb {
   my ($data, $buffer, $args) = @_;
+  my ($option, $arg) = split " ", $args;
 
-  if ($args eq 'list') {
+  if ($option eq 'list') {
     foreach my $server (keys %channel_list) {
       weechat::print("", "Throttled channels on '$server': " . join(', ', @{$channel_list{$server}}));
     }
+  } elsif ($option eq 'clear') {
+    if (defined($arg) && exists($channel_list{$arg}) {
+      delete $channel_list{$arg};
+    } else {
+      foreach my $server (keys %channel_list) {
+        delete $channel_list{$server};
+      }
+    }
+    weechat::bar_item_update($SCRIPT_NAME);
   }
+  return weechat::WEECHAT_RC_OK;
 }
 
 sub init_config {
