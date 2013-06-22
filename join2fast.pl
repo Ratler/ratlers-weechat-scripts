@@ -160,11 +160,7 @@ sub bar_cb {
     $queue_size += scalar @{$channel_list{$server}};
   }
 
-  if ($queue_size > 0) {
-    return "Q: $queue_size N: " . get_next_join_time();
-  }
-
-  return "";
+  return $queue_size > 0 ? "Q: $queue_size N: " . get_next_join_time() : "";
 }
 
 sub get_next_join_time {
