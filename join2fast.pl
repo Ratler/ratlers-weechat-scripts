@@ -27,7 +27,7 @@ use warnings;
 my $SCRIPT_NAME = "join2fast";
 my $VERSION = "0.8-dev";
 my %timers;
-my $next_join;
+my %next_join;
 my %channel_list;
 my %default_options = ('timer_delay'    => ['4', 'default delay in seconds added to the timer before trying to join the next channel in the list'],
                        'date_format'    => ['%H:%M:%S', 'date and time format for time of the next join. Used by join2fast bar item.'],
@@ -37,7 +37,7 @@ my %options = ();
 
 # Register script
 weechat::register($SCRIPT_NAME, "Ratler <ratler\@stderr.eu>", $VERSION, "GPL3",
-                  "Automatically join channels on UnderNET that get throttled due to \"Target change too fast\"", "", "");
+                  "Automatically join channels on UnderNET that get throttled due to \"Target change too fast\"", "clear_all_on_script_unload", "");
 
 my $weechat_version = weechat::info_get("version_number", "") || 0;
 if ($weechat_version < 0x00030200) {
@@ -82,8 +82,9 @@ sub event_439_cb {
   }
 
   # Reset timer to the last delay received
-  weechat::unhook($timers{$server}) if $timers{$server};
-  $next_join = strftime($options{date_format}, localtime(time() + $delay + 2));
+  weechat::unhook($timers{$server}) if exists($timers{$server});
+
+  $next_join{$server} = {timestamp => time() + $delay + 2};
   $timers{$server} = weechat::hook_timer(($delay + 2) * 1000, 0, 1, "join_channel_cb", $server);
 
   # Update bar
@@ -98,8 +99,19 @@ sub clear_queue_on_disconnect {
 
   if (exists($channel_list{$server})) {
     delete $channel_list{$server};
+    delete $next_join{$server};
     weechat::bar_item_update($SCRIPT_NAME);
   }
+
+  return weechat::WEECHAT_RC_OK;
+}
+
+sub clear_all_on_script_unload {
+  foreach my $server (keys %timers) {
+    weechat::unhook($timers{$server});
+  }
+  undef %channel_list;
+  undef %next_join;
 
   return weechat::WEECHAT_RC_OK;
 }
@@ -129,9 +141,10 @@ sub join_channel_cb {
     # Setup a new timer
     if ((ref $channel_list{$server} eq 'ARRAY') and scalar @{$channel_list{$server}} > 0) {
       $timers{$server} = weechat::hook_timer($options{timer_delay} * 1000, 0, 1, "join_channel_cb", $server);
-      $next_join = strftime($options{date_format}, localtime(time() + $options{timer_delay}));
+      $next_join{$server} = {timestamp => time() + $options{timer_delay}};
     } else {
       delete $channel_list{$server};
+      delete $next_join{$server};
     }
   }
 
@@ -149,10 +162,15 @@ sub bar_cb {
   }
 
   if ($queue_size > 0) {
-    return "Q: $queue_size N: $next_join";
+    return "Q: $queue_size N: " . get_next_join_time();
   }
 
   return "";
+}
+
+sub get_next_join_time {
+  my $key = (sort {$next_join{$a}->{timestamp} <=> $next_join{$b}->{timestamp}} keys (%next_join))[0];
+  return strftime($options{date_format}, localtime($next_join{$key}{timestamp}));
 }
 
 sub j2f_command_cb {
@@ -160,15 +178,29 @@ sub j2f_command_cb {
   my ($option, $arg) = split " ", $args;
 
   if ($option eq 'list') {
-    foreach my $server (keys %channel_list) {
-      weechat::print("", "Throttled channels on '$server': " . join(', ', @{$channel_list{$server}}));
+    if (scalar (keys %channel_list) > 0) {
+      foreach my $server (keys %channel_list) {
+        weechat::print("", "$SCRIPT_NAME: Throttled channels on '$server': " . join(', ', @{$channel_list{$server}}));
+      }
+    } else {
+      weechat::print("", "$SCRIPT_NAME: no channels currently queued.");
     }
   } elsif ($option eq 'clear') {
-    if (defined($arg) && exists($channel_list{$arg}) {
+    if (defined($arg)) {
+      if (exists($timers{$arg})) {
+        weechat::unhook($timers{$arg});
+        delete $timers{$arg};
+      }
       delete $channel_list{$arg};
+      delete $next_join{$arg};
     } else {
       foreach my $server (keys %channel_list) {
+        if (exists($timers{$server})) {
+          weechat::unhook($timers{$server});
+          delete $timers{$server};
+        }
         delete $channel_list{$server};
+        delete $next_join{$server};
       }
     }
     weechat::bar_item_update($SCRIPT_NAME);
