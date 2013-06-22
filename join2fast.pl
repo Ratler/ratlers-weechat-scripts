@@ -90,8 +90,7 @@ sub event_439_cb {
   # Update bar
   weechat::bar_item_update($SCRIPT_NAME);
 
-  return $string if lc($options{hide_event_msg}) eq 'off';
-  return "";
+  return lc($options{hide_event_msg}) eq 'off' ? $string : "";
 }
 
 sub clear_queue_on_disconnect {
