@@ -4,4 +4,4 @@ A perl script for Weechat - Automatically join channels on UnderNET that get thr
 
 # ToDo
 
-* Add support to switch back to the previously focused buffer after join2fast join a throttled channel
+* Add support for throttled private messages
