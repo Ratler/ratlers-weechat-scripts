@@ -25,7 +25,7 @@ use strict;
 use warnings;
 
 my $SCRIPT_NAME = "join2fast";
-my $VERSION = "0.8";
+my $VERSION = "0.8.1";
 my %timers;
 my %next_join;
 my %channel_list;
