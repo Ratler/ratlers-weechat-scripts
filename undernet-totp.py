@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# WeeChat script for UnderNET's X OATH-TOTP authentication
+# WeeChat script for UnderNET's X OTP (OATH-TOTP) authentication
 #
 #
 
@@ -24,7 +24,7 @@ SCRIPT_NAME    = "undernet-totp"
 SCRIPT_AUTHOR  = "Stefan Wold <ratler@stderr.eu>"
 SCRIPT_VERSION = "0.1dev"
 SCRIPT_LICENSE = "GPL3"
-SCRIPT_DESC    = "UnderNET X OTP authentication"
+SCRIPT_DESC    = "UnderNET X OTP (OATH-TOTP) authentication"
 SCRIPT_COMMAND = "uotp"
 
 HOOKS = {}
@@ -95,7 +95,7 @@ def totp_login_modifier_cb(data, modifier, server, cmd):
 
 
 def auth_success_cb(server, signal, signal_data):
-    if server in enabled_servers() and signal_data.startswith(":X!cservice@undernet.org NOTICE"):
+    if signal_data.startswith(":X!cservice@undernet.org NOTICE"):
         if re.match(r'^:X!cservice@undernet.org NOTICE .+ :AUTHENTICATION SUCCESSFUL', signal_data):
             unhook_all(server)
 
@@ -123,8 +123,14 @@ def get_otp_cb(data, buffer, server):
 
 
 def enabled_servers():
+    def server_exists(server):
+        print_debug('enabled_servers(%s)' % server)
+        if weechat.config_get('irc.server.%s.addresses' % server) is not '':
+            return True
+        return False
+
     servers = weechat.config_get_plugin('otp_server_names')
-    return [server.strip() for server in servers.split(',')]
+    return [s.strip() for s in servers.split(',') if server_exists(s.strip())]
 
 
 def generate_totp(server, period=30):
@@ -168,5 +174,5 @@ if __name__ == "__main__" and import_ok:
         # For now we enable the hooks until it's possible to force script plugins to
         # load before the irc plugin on weechat startup, otherwise the irc_server_connecting signal
         # get missed.
-        for server in enabled_servers():
-            hook_all(server)
+        for _server in enabled_servers():
+            hook_all(_server)
