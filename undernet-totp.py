@@ -15,14 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+# (This script requires WeeChat 0.4.2 or higher).
 #
 # WeeChat script for UnderNET's X OTP (OATH-TOTP) authentication
 #
+# The script will generate an OTP and automatically append it when it
+# notices /msg x@channels.undernet.org login <username> <password> command.
+# This allows OTP login when using irc.server.*.command to automatically
+# sign in to the X service when connecting to an undernet server.
+#
+# Configuration:
+#  /set plugins.var.python.undernet-totp.otp_server_names "<server1>,<server2>,..."
+#  Set servers for which to automatically enable OTP login
+#
+# Commands:
+#  /uotp <server>
+#  Generate an OTP for supplied server, output in core buffer.
 #
 
-SCRIPT_NAME    = "undernet-totp"
+
+SCRIPT_NAME    = "undernet_totp"
 SCRIPT_AUTHOR  = "Stefan Wold <ratler@stderr.eu>"
-SCRIPT_VERSION = "0.1dev"
+SCRIPT_VERSION = "0.2"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC    = "UnderNET X OTP (OATH-TOTP) authentication"
 SCRIPT_COMMAND = "uotp"
