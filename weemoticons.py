@@ -27,7 +27,7 @@
 
 SCRIPT_NAME    = "weemoticons"
 SCRIPT_AUTHOR  = "Stefan Wold <ratler@stderr.eu>"
-SCRIPT_VERSION = "0.1"
+SCRIPT_VERSION = "0.2dev"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC    = "Convert ascii emotes to unicode emoticons."
 SCRIPT_COMMAND = "weemoticons"
@@ -53,11 +53,11 @@ ICONS = {
     # '': u'\U0001F607',  # SMILING FACE WITH HALO
     '>:D': u'\U0001F608', '>=D': u'\U0001F608',  # SMILING FACE WITH HORNS
     ';)': u'\U0001F609', ';-)': u'\U0001F609',  # WINKING FACE
-    '8)': u'\U0001F60A', 'B)': u'\U0001F60A',   # SMILING FACE WITH SMILING EYES
+    # '': u'\U0001F60A',   # SMILING FACE WITH SMILING EYES
     # '': u'\U0001F60B',  # FACE SAVOURING DELICIOUS FOOD
     # '': u'\U0001F60C',  # RELIEVED FACE
     # '': u'\U0001F60D',  # SMILING FACE WITH HEART-SHAPED EYES
-    # '': u'\U0001F60E',  # SMILING FACE WITH SUNGLASSES
+    '8)': u'\U0001F60E', 'B)': u'\U0001F60E',  # SMILING FACE WITH SUNGLASSES
     # '': u'\U0001F60F',  # SMIRKING FACE
     # '': u'\U0001F610',  # NEUTRAL FACE
     # '': u'\U0001F611',  # EXPRESSIONLESS FACE
