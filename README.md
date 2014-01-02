@@ -1,7 +1,7 @@
-# join2fast 
+# join2fast.pl
 
-A perl script for Weechat - Automatically join channels on UnderNET that get throttled due to "Target change too fast".
+* WeeChat script to automatically queue and join channels on UnderNET which get throttled with "Target change too fast".
 
-# ToDo
+# undernet_totp.py
 
-* Add support for throttled private messages
+* WeeChat script for UnderNET's X OTP (OATH-TOTP) authentication.
