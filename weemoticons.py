@@ -19,6 +19,8 @@
 #
 # WeeChat script that convert ascii emotes to the Unicode (version 6.3) equivalent emoticon.
 #
+# Source available on GitHUB: https://github.com/Ratler/ratlers-weechat-scripts
+#
 # Commands:
 # /weemoticons - List supported emoticons in the current buffer
 

@@ -24,6 +24,8 @@
 # This allows OTP login when using irc.server.*.command to automatically
 # sign in to the X service when connecting to an undernet server.
 #
+# Source available on GitHUB: https://github.com/Ratler/ratlers-weechat-script
+#
 # Configuration:
 #  /set plugins.var.python.undernet-totp.otp_server_names "<server1>,<server2>,..."
 #  Set servers for which to automatically enable OTP login

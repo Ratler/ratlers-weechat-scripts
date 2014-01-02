@@ -14,7 +14,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# Source available on GitHUB: https://github.com/Ratler/join2fast
+# Source available on GitHUB: https://github.com/Ratler/ratlers-weechat-script
 #
 #
 # Automatically queue and join channels on UnderNET that get throttled due to "Target change too fast".
