@@ -154,10 +154,5 @@ def list_icons_cb(data, buf, args):
 
 if __name__ == "__main__" and import_ok:
     if weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", ""):
-        version = weechat.info_get("version_number", "") or 0
-        if int(version) < 0x00030000:
-            weechat.prnt("", "%s requires WeeChat >= 0.3.0" % SCRIPT_NAME)
-            weechat.command("", "/wait 1ms /python unload %s" % SCRIPT_NAME)
-
         weechat.hook_modifier('weechat_print', 'convert_icon_cb', '')
         weechat.hook_command(SCRIPT_COMMAND, "List supported emoticons", "", "", "", "list_icons_cb", "")
