@@ -31,7 +31,7 @@
 
 SCRIPT_NAME    = "responsive_layout"
 SCRIPT_AUTHOR  = "Stefan Wold <ratler@stderr.eu>"
-SCRIPT_VERSION = "0.5"
+SCRIPT_VERSION = "0.6"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC    = "Responsive layout automatically apply layouts based on the terminals current dimensions."
 SCRIPT_COMMAND = "rlayout"
@@ -243,8 +243,8 @@ def rlayout_bar_cb(data, item, window):
 
     while weechat.infolist_next(infolist):
         if weechat.infolist_integer(infolist, "current_layout") == 1:
-           layout = weechat.infolist_string(infolist, "name")
-           break
+            layout = weechat.infolist_string(infolist, "name")
+            break
 
     weechat.infolist_free(infolist)
 
@@ -273,7 +273,7 @@ if __name__ == "__main__" and import_ok:
     if weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", ""):
         version = weechat.info_get("version_number", "") or 0
         if int(version) < 0x00040300:
-            _print("Requires WeeChat >= 0.4.3 for terminal height and width support." % SCRIPT_NAME)
+            _print("Requires WeeChat >= 0.4.3 for terminal height and width support.")
             weechat.command("", "/wait 1ms /python unload %s" % SCRIPT_NAME)
 
         weechat.hook_command(SCRIPT_COMMAND,
