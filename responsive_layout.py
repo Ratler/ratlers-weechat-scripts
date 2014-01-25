@@ -31,7 +31,7 @@
 
 SCRIPT_NAME    = "responsive_layout"
 SCRIPT_AUTHOR  = "Stefan Wold <ratler@stderr.eu>"
-SCRIPT_VERSION = "0.1dev"
+SCRIPT_VERSION = "0.5"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC    = "Responsive layout automatically apply layouts based on the terminals current dimensions."
 SCRIPT_COMMAND = "rlayout"
