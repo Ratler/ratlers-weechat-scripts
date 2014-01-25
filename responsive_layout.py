@@ -35,6 +35,10 @@ SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC    = "Responsive layout"
 SCRIPT_COMMAND = "rlayout"
 
+SETTINGS = {
+    "nicklist": ("on", "Global setting to always show nicklist when layout switches.")
+}
+
 LAYOUT_LIST = []
 
 import_ok = True
@@ -74,7 +78,7 @@ def responsive_cb(data, signal, signal_data):
             toggle_nick_list(apply_layout)
 
     except ValueError:
-        weechat.prnt("height or width is not a number, ignored.")
+        weechat.prnt("", "height or width is not a number, ignored.")
 
     return weechat.WEECHAT_RC_OK
 
@@ -111,10 +115,12 @@ def toggle_nick_list(layout):
     Check configuration whether nick list bar should be on or off for the provided layout.
     """
     value = weechat.config_get_plugin("layout.%s.nicklist" % layout)
+    if value == "":
+        value = weechat.config_get_plugin("nicklist")
 
     if value == "on":
         weechat.command("", "/bar show nicklist")
-    if value == "off":
+    elif value == "off":
         weechat.command("", "/bar hide nicklist")
 
 
@@ -215,6 +221,13 @@ if __name__ == "__main__" and import_ok:
                              " || nicklist %(layouts_names) %(rlayout_bool_value)",
                              "rlayout_cmd_cb",
                              "")
+
+        # Default settings
+        for option, default_value in SETTINGS.items():
+            if weechat.config_get_plugin(option) == "":
+                weechat.config_set_plugin(option, default_value[0])
+            weechat.config_set_desc_plugin(option, '%s (default: %s)' % (default_value[1], default_value[0]))
+
         weechat.hook_completion("rlayout_bool_value", "list of bool values", "rlayout_completion_bool_cb", "")
         update_layout_list()
         hook = weechat.hook_signal("signal_sigwinch", "responsive_cb", "")
