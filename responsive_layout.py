@@ -68,7 +68,7 @@ def responsive_cb(data, signal, signal_data):
             # Always apply the last layout if term width/height is larger than configured layouts
             apply_layout = LAYOUT_LIST[-1][0]
 
-        if layout_current(apply_layout) is not True:
+        if layout_exist(apply_layout) and not layout_current(apply_layout):
             weechat.prnt("", "Applying layout %s" % apply_layout)
             weechat.command("", "/layout apply %s" % apply_layout)
             toggle_nick_list(apply_layout)
