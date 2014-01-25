@@ -24,6 +24,7 @@
 #
 # Configuration:
 #  /set plugins.var.python.responsive_layout.nicklist <on|off>  -  Enable or disable global nicklist for layouts
+#  Use bar item 'rlayout' to get current layout and terminal dimension.
 # Commands:
 #  /rlayout
 
@@ -80,6 +81,7 @@ def responsive_cb(data, signal, signal_data):
             _print("Applying layout %s" % apply_layout)
             weechat.command("", "/layout apply %s" % apply_layout)
             toggle_nick_list(apply_layout)
+            weechat.bar_item_update("rlayout")
 
     except ValueError:
         _print("Height or width is not in number form, ignoring.")
@@ -235,6 +237,26 @@ def rlayout_cmd_cb(data, buffer, args):
     return weechat.WEECHAT_RC_OK
 
 
+def rlayout_bar_cb(data, item, window):
+    infolist = weechat.infolist_get("layout", "", "")
+    layout = None
+
+    while weechat.infolist_next(infolist):
+        if weechat.infolist_integer(infolist, "current_layout") == 1:
+           layout = weechat.infolist_string(infolist, "name")
+           break
+
+    weechat.infolist_free(infolist)
+
+    if layout is None:
+        return ""
+    else:
+        term_height = int(weechat.info_get("term_height", ""))
+        term_width = int(weechat.info_get("term_width", ""))
+
+    return "%s (%sx%s)" % (layout, term_width, term_height)
+
+
 def rlayout_completion_bool_cb(data, completion_item, buffer, completion):
     for bool in ("on", "off"):
         weechat.hook_completion_list_add(completion, bool, 0, weechat.WEECHAT_LIST_POS_SORT)
@@ -279,5 +301,6 @@ if __name__ == "__main__" and import_ok:
 
         weechat.hook_completion("rlayout_bool_value", "list of bool values", "rlayout_completion_bool_cb", "")
         weechat.hook_completion("rlayouts_names", "list of rlayouts", "rlayout_completion_layout_list_cb", "")
+        weechat.bar_item_new("rlayout", "rlayout_bar_cb", "")
         update_layout_list()
         hook = weechat.hook_signal("signal_sigwinch", "responsive_cb", "")
