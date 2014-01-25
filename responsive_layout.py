@@ -81,8 +81,8 @@ def responsive_cb(data, signal, signal_data):
             _print("Applying layout %s" % apply_layout)
             weechat.command("", "/layout apply %s" % apply_layout)
             toggle_nick_list(apply_layout)
-            weechat.bar_item_update("rlayout")
 
+        weechat.bar_item_update("rlayout")
     except ValueError:
         _print("Height or width is not in number form, ignoring.")
 
