@@ -284,7 +284,8 @@ if __name__ == "__main__" and import_ok:
                              "nicklist: show or hide nicklist bar when layout is automatically applied\n"
                              "  remove: remove settings for responsive layout\n"
                              "    list: list current configuration\n"
-                             "terminal: list current terminal width and height\n\n",
+                             "terminal: list current terminal width and height\n\n"
+                             "To get current layout and terminal dimensions in your bar, use 'rlayout' bar item.",
                              "size %(layouts_names)"
                              " || nicklist %(layouts_names) %(rlayout_bool_value)"
                              " || remove %(rlayouts_names)"
