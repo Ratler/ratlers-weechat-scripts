@@ -177,7 +177,9 @@ def rlayout_cmd_cb(data, buffer, args):
     if len(argv) == 0:
         return weechat.WEECHAT_RC_OK
 
-    if argv[0] != "list" and len(argv) < 2:
+    if argv[0] != "list" and \
+       argv[0] != "terminal" and \
+       len(argv) < 2:
         _print("Too few arguments for option '%s'." % argv[0])
         return weechat.WEECHAT_RC_OK
 
@@ -225,6 +227,10 @@ def rlayout_cmd_cb(data, buffer, args):
                 if nicklist is not "":
                     msg += ", nicklist: %s" % nicklist
                 _print(msg)
+    elif argv[0] == "terminal":
+        term_height = int(weechat.info_get("term_height", ""))
+        term_width = int(weechat.info_get("term_width", ""))
+        _print("Current terminal width x height is: %s x %s" % (term_width, term_height))
 
     return weechat.WEECHAT_RC_OK
 
@@ -249,16 +255,19 @@ if __name__ == "__main__" and import_ok:
             weechat.command("", "/wait 1ms /python unload %s" % SCRIPT_NAME)
 
         weechat.hook_command(SCRIPT_COMMAND,
-                             "WeeChat responsive layout",
-                             "size <layout> <width> <height> || nicklist <layout> <on|off> || remove <layout> || list",
+                             "WeeChat responsive layout configuration",
+                             "size <layout> <width> <height> || nicklist <layout> <on|off> || remove <layout> || list"
+                             " || terminal",
                              "    size: set max size (width and height) for layout to be automatically applied\n"
                              "nicklist: show or hide nicklist bar when layout is automatically applied\n"
                              "  remove: remove settings for responsive layout\n"
-                             "    list: list current configuration\n\n",
+                             "    list: list current configuration\n"
+                             "terminal: list current terminal width and height\n\n",
                              "size %(layouts_names)"
                              " || nicklist %(layouts_names) %(rlayout_bool_value)"
                              " || remove %(rlayouts_names)"
-                             " || list",
+                             " || list"
+                             " || terminal",
                              "rlayout_cmd_cb",
                              "")
 
