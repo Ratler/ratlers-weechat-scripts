@@ -22,9 +22,6 @@
 #
 # Source and changes available on GitHUB: https://github.com/Ratler/ratlers-weechat-scripts
 #
-# Configuration:
-#  /set plugins.var.python.responsive_layout.nicklist <on|off>  -  Enable or disable global nicklist for layouts
-#  Use bar item 'rlayout' to get current layout and terminal dimension.
 # Commands:
 #  /rlayout
 
