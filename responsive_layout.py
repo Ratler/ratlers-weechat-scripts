@@ -37,7 +37,9 @@ SCRIPT_DESC    = "Responsive layout will automatically apply layouts based on th
 SCRIPT_COMMAND = "rlayout"
 
 SETTINGS = {
-    "nicklist": ("on", "Global setting to always show nicklist when layout switches.")
+    "default_nicklist": ("on", "Global setting to always show nicklist when layout switches."),
+               "debug": ("off", "Script debug output"),
+
 }
 
 LAYOUT_LIST = []
@@ -60,6 +62,11 @@ except ImportError as err:
 
 def _print(message, buf=""):
     weechat.prnt(buf, "%s: %s" % (SCRIPT_NAME, message))
+
+
+def _debug(message, buf=""):
+    if weechat.config_get_plugin('debug') == 'on':
+        weechat.prnt(buf, "+++ %s (debug): %s" % (SCRIPT_NAME, message))
 
 
 def responsive_cb(data, signal, signal_data):
@@ -122,7 +129,7 @@ def toggle_nick_list(layout):
     """
     value = weechat.config_get_plugin("layout.%s.nicklist" % layout)
     if value == "":
-        value = weechat.config_get_plugin("nicklist")
+        value = weechat.config_get_plugin("default_nicklist")
 
     if value == "on":
         weechat.command("", "/bar show nicklist")
@@ -164,6 +171,7 @@ def update_layout_list():
             layout_tuples.append((layout, int(width), int(height)))
 
     layout_tuples.sort(key=itemgetter(1, 2))
+    _debug("update_layout_list(%s)" % layout_tuples)
     LAYOUT_LIST = layout_tuples
 
 
@@ -179,9 +187,8 @@ def rlayout_cmd_cb(data, buffer, args):
     if len(argv) == 0:
         return weechat.WEECHAT_RC_OK
 
-    if argv[0] != "list" and \
-       argv[0] != "terminal" and \
-       len(argv) < 2:
+    short_cmds = ["list", "terminal"]
+    if argv[0] not in short_cmds and len(argv) < 2:
         _print("Too few arguments for option '%s'." % argv[0])
         return weechat.WEECHAT_RC_OK
 
@@ -210,6 +217,11 @@ def rlayout_cmd_cb(data, buffer, args):
                 _print("Layout '%s' doesn't exist, see /help layout to create one." % layout)
         except ValueError:
             _print("Too few arguments for option '%s'" % argv[0])
+    elif argv[0] == "default_nicklist" or argv[0] == "debug":
+        if argv[1] == "on" or argv[1] == "off":
+            weechat.config_set_plugin(argv[0], argv[1])
+        else:
+            _print("Invalid argument '%s' for option '%s'" % (argv[1], argv[0]))
     elif argv[0] == "remove":
         if argv[1] in rlayouts_list():
             for option in ["width", "height", "nicklist"]:
@@ -269,6 +281,11 @@ def rlayout_completion_layout_list_cb(data, completion_item, buffer, completion)
     return weechat.WEECHAT_RC_OK
 
 
+def config_cb(data, option, value):
+    update_layout_list()
+    return weechat.WEECHAT_RC_OK
+
+
 if __name__ == "__main__" and import_ok:
     if weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE, SCRIPT_DESC, "", ""):
         version = weechat.info_get("version_number", "") or 0
@@ -278,19 +295,23 @@ if __name__ == "__main__" and import_ok:
 
         weechat.hook_command(SCRIPT_COMMAND,
                              "WeeChat responsive layout configuration",
-                             "size <layout> <width> <height> || nicklist <layout> <on|off> || remove <layout> || list"
-                             " || terminal",
-                             "    size: set max size (width and height) for layout to be automatically applied\n"
-                             "nicklist: show or hide nicklist bar when layout is automatically applied\n"
-                             "  remove: remove settings for responsive layout\n"
-                             "    list: list current configuration\n"
-                             "terminal: list current terminal width and height\n\n"
+                             "size <layout> <width> <height> || nicklist <layout> <on|off> || default_nicklist <on|off>"
+                             " || remove <layout> || list || terminal || debug <on|off>",
+                             "            size: set max size (width and height) for layout to be automatically applied\n"
+                             "        nicklist: show or hide nicklist bar when layout is automatically applied\n"
+                             "default_nicklist: default show or hide nicklist bar if not configured per layout\n"
+                             "          remove: remove settings for responsive layout\n"
+                             "            list: list current configuration\n"
+                             "        terminal: list current terminal width and height\n"
+                             "           debug: print script debug output\n\n"
                              "To get current layout and terminal dimensions in your bar, use 'rlayout' bar item.",
                              "size %(layouts_names)"
                              " || nicklist %(layouts_names) %(rlayout_bool_value)"
+                             " || default_nicklist %(rlayout_bool_value)"
                              " || remove %(rlayouts_names)"
                              " || list"
-                             " || terminal",
+                             " || terminal"
+                             " || debug %(rlayout_bool_value)",
                              "rlayout_cmd_cb",
                              "")
 
@@ -302,6 +323,7 @@ if __name__ == "__main__" and import_ok:
 
         weechat.hook_completion("rlayout_bool_value", "list of bool values", "rlayout_completion_bool_cb", "")
         weechat.hook_completion("rlayouts_names", "list of rlayouts", "rlayout_completion_layout_list_cb", "")
+        weechat.hook_config("plugins.var.python.responsive_layout.layout.*", "config_cb", "")
         weechat.bar_item_new("rlayout", "rlayout_bar_cb", "")
         update_layout_list()
         hook = weechat.hook_signal("signal_sigwinch", "responsive_cb", "")
