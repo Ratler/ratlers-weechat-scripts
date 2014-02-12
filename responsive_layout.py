@@ -34,9 +34,10 @@ SCRIPT_DESC    = "Responsive layout will automatically apply layouts based on th
 SCRIPT_COMMAND = "rlayout"
 
 SETTINGS = {
-    "default_nicklist": ("on", "Global setting to always show nicklist when layout switches."),
-               "debug": ("off", "Script debug output"),
-
+       "default_nicklist": ("on", "Global setting to always show nicklist when layout switches."),
+                  "debug": ("off", "Script debug output"),
+    "default_time_format": ("%H:%M:%S", "Default time format applied to layout on switch, leave blank to disable or \
+    override by setting time format per rlayout")
 }
 
 LAYOUT_LIST = []
@@ -84,7 +85,7 @@ def responsive_cb(data, signal, signal_data):
         if layout_exist(apply_layout) and not layout_current(apply_layout):
             _print("Applying layout %s" % apply_layout)
             weechat.command("", "/layout apply %s" % apply_layout)
-            toggle_nick_list(apply_layout)
+            toggle_options(apply_layout)
 
         weechat.bar_item_update("rlayout")
     except ValueError:
@@ -120,10 +121,12 @@ def layout_exist(layout):
     return found
 
 
-def toggle_nick_list(layout):
+def toggle_options(layout):
     """
-    Check configuration whether nick list bar should be on or off for the provided layout.
+    Set various options for the active layout
     """
+
+    # Toggle nicklist
     value = weechat.config_get_plugin("layout.%s.nicklist" % layout)
     if value == "":
         value = weechat.config_get_plugin("default_nicklist")
@@ -132,6 +135,13 @@ def toggle_nick_list(layout):
         weechat.command("", "/bar show nicklist")
     elif value == "off":
         weechat.command("", "/bar hide nicklist")
+
+    # Set buffer time format
+    value = weechat.config_get_plugin("layout.%s.time_format" % layout)
+    if value == "":
+        value = weechat.config_get_plugin("default_time_format")
+    if value != "":
+        weechat.command("", "/mute /set weechat.look.buffer_time_format %s" % value)
 
 
 def rlayouts_list():
@@ -219,10 +229,25 @@ def rlayout_cmd_cb(data, buffer, args):
             weechat.config_set_plugin(argv[0], argv[1])
         else:
             _print("Invalid argument '%s' for option '%s'" % (argv[1], argv[0]))
+    elif argv[0] == "time_format":
+        try:
+            layout, time_format = argv[1].split(" ")
+
+            if layout_exist(layout):
+                weechat.config_set_plugin("layout.%s.time_format" % layout, time_format)
+            else:
+                _print("Layout '%s' doesn't exist, see /help layout to create one." % layout)
+        except ValueError:
+            _print("Too few arguments for option '%s'" % argv[0])
+    elif argv[0] == "default_time_format":
+        if argv[1] == '""':
+            weechat.config_set_plugin(argv[0], "")
+        else:
+            weechat.config_set_plugin(argv[0], argv[1])
     elif argv[0] == "remove":
         if argv[1] in rlayouts_list():
-            for option in ["width", "height", "nicklist"]:
-                weechat.config_unset_plugin("layout.%s.%s" % (argv[1], option))
+            for _option in ["width", "height", "nicklist"]:
+                weechat.config_unset_plugin("layout.%s.%s" % (argv[1], _option))
             _print("Removed rlayout '%s'" % argv[1])
         else:
             _print("Could not remove '%s', rlayout not found." % argv[1])
@@ -293,18 +318,23 @@ if __name__ == "__main__" and import_ok:
         weechat.hook_command(SCRIPT_COMMAND,
                              "WeeChat responsive layout configuration",
                              "size <layout> <width> <height> || nicklist <layout> <on|off> || default_nicklist <on|off>"
+                             " || time_format <layout> <format> || default_time_format <format>"
                              " || remove <layout> || list || terminal || debug <on|off>",
-                             "            size: set max size (width and height) for layout to be automatically applied\n"
-                             "        nicklist: show or hide nicklist bar when layout is automatically applied\n"
-                             "default_nicklist: default show or hide nicklist bar if not configured per layout\n"
-                             "          remove: remove settings for responsive layout\n"
-                             "            list: list current configuration\n"
-                             "        terminal: list current terminal width and height\n"
-                             "           debug: print script debug output\n\n"
+                             "               size: set max size (width and height) for layout to be automatically applied\n"
+                             "           nicklist: show or hide nicklist bar when layout is automatically applied\n"
+                             "   default_nicklist: default show or hide nicklist bar if not configured per layout\n"
+                             "        time_format: set buffer time format for layout\n"
+                             "default_time_format: set default buffer time format, ie (%H:%M:%S)\n"
+                             "             remove: remove settings for responsive layout\n"
+                             "               list: list current configuration\n"
+                             "           terminal: list current terminal width and height\n"
+                             "              debug: print script debug output\n\n"
                              "To get current layout and terminal dimensions in your bar, use 'rlayout' bar item.",
                              "size %(layouts_names)"
                              " || nicklist %(layouts_names) %(rlayout_bool_value)"
                              " || default_nicklist %(rlayout_bool_value)"
+                             " || time_format %(layouts_names)"
+                             " || default_time_format"
                              " || remove %(rlayouts_names)"
                              " || list"
                              " || terminal"
