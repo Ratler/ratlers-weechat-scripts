@@ -38,7 +38,7 @@
 
 SCRIPT_NAME    = "undernet_totp"
 SCRIPT_AUTHOR  = "Stefan Wold <ratler@stderr.eu>"
-SCRIPT_VERSION = "0.2"
+SCRIPT_VERSION = "0.3"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC    = "UnderNET X OTP (OATH-TOTP) authentication"
 SCRIPT_COMMAND = "uotp"
