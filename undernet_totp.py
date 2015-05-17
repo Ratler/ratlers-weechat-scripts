@@ -135,10 +135,16 @@ def signal_cb(data, signal, server):
 
 
 def get_otp_cb(data, buffer, server):
-    otp = generate_totp(server)
+    if server:
+        server = [server]
+    else:
+        server = enabled_servers()
 
-    if otp is not None:
-        weechat.prnt("", "%s OTP: %s" % (server, otp))
+
+    for _server in server:
+        otp = generate_totp(_server)
+        if otp is not None:
+            weechat.prnt("", "%s OTP: %s" % (_server, otp))
 
     return weechat.WEECHAT_RC_OK
 
@@ -183,7 +189,7 @@ if __name__ == "__main__" and import_ok:
             weechat.prnt("", "%s requires WeeChat >= 0.4.2 for secure_data support." % SCRIPT_NAME)
             weechat.command("", "/wait 1ms /python unload %s" % SCRIPT_NAME)
 
-        weechat.hook_command(SCRIPT_COMMAND, "Generate OTP for supplied server", "<server>", "", "%(irc_servers)", "get_otp_cb", "")
+        weechat.hook_command(SCRIPT_COMMAND, "Generate OTP for supplied server", "[server]", "", "%(irc_servers)", "get_otp_cb", "")
         weechat.hook_signal("irc_server_connecting", "signal_cb", "")
         weechat.hook_signal("irc_server_disconnected", "signal_cb", "")
 
