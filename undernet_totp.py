@@ -165,7 +165,7 @@ def generate_totp(server, period=30):
     if len(seed) == 40:  # Assume hex format
         seed = unhexlify(seed)
     else:
-        seed = b32decode(seed, True)
+        seed = b32decode(seed.replace(" ", ""), True)
 
     t = pack(">Q", int(time() / period))
     _hmac = hmac.new(seed, t, sha1).digest()
