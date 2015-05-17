@@ -86,7 +86,7 @@ def unhook(hook):
 
 
 def unhook_all(server):
-    for hook in [server+'.notice', server+'.modifier']:
+    for hook in [server+'.notice', server+'.modifier', server+'.modifier2']:
         unhook(hook)
 
 
@@ -95,18 +95,23 @@ def hook_all(server):
 
     notice = server + '.notice'
     modifier = server + '.modifier'
+    modifier2 = server + '.modifier2'
 
     if notice not in HOOKS:
-        HOOKS[notice]   = weechat.hook_signal("%s,irc_raw_in_notice" % server, "auth_success_cb", server)
+        HOOKS[notice] = weechat.hook_signal("%s,irc_raw_in_notice" % server, "auth_success_cb", server)
     if modifier not in HOOKS:
-        HOOKS[modifier] = weechat.hook_modifier("irc_out_privmsg", "totp_login_modifier_cb", "")
+        HOOKS[modifier] = weechat.hook_modifier("irc_out_privmsg", "totp_login_modifier_cb", server)
+    if modifier2 not in HOOKS:
+        HOOKS[modifier2] = weechat.hook_modifier("irc_out_pass", "totp_login_modifier_cb", server)
 
 
 def totp_login_modifier_cb(data, modifier, server, cmd):
-    if server in enabled_servers() and re.match(r'(?i)^PRIVMSG x@channels.undernet.org :login .+ .+', cmd):
-        otp = generate_totp(server)
-        if otp is not None:
-            cmd += " %s" % otp
+    if server == data and server in enabled_servers():
+        if re.match(r'(?i)^PRIVMSG x@channels.undernet.org :login .+ .+', cmd) or re.match(r'(?i)^PASS .*', cmd):
+            print_debug("totp_login_modifier_cb(%s)" % cmd)
+            otp = generate_totp(server)
+            if otp is not None:
+                cmd += " %s" % otp
     return cmd
 
 
