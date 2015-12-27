@@ -29,7 +29,7 @@
 
 SCRIPT_NAME    = "weemoticons"
 SCRIPT_AUTHOR  = "Stefan Wold <ratler@stderr.eu>"
-SCRIPT_VERSION = "0.3dev"
+SCRIPT_VERSION = "0.3"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC    = "Convert ascii emotes to unicode emoticons."
 SCRIPT_COMMAND = "weemoticons"
