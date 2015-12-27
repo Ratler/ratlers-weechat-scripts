@@ -21,6 +21,9 @@
 #
 # Source available on GitHUB: https://github.com/Ratler/ratlers-weechat-scripts
 #
+# Contributors:
+# Nicolas G. Querol 
+#
 # Commands:
 # /weemoticons - List supported emoticons in the current buffer
 
