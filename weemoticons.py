@@ -95,7 +95,7 @@ ICONS = {
     ':")': u'\U0001F633', '=")': u'\U0001F633',  # FLUSHED FACE
 }
 
-ICON_PATTERN = re.compile(r"(?<!\S)([>;:=8B]\S{1,2})")
+ICON_PATTERN = re.compile(r"(?<!\S)([>;:=8B\^]\S{1,2})")
 
 def icon(match):
     global ICONS
